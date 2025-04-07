@@ -1,0 +1,14 @@
+Create a new Node js project and git repo. This project will import recipes from a Google Drive account. The user will specify the Google Drive folder to start from and it will iterate through all the folders and Google doc files in each folder. It will extract the text from each Google doc file and then make a request to the OpenAI API (using credentials in the .env file) to generate a recipe JSON file following the schema at "https://schema.org/Recipe" from the Google doc text. It should utilize the Google Drive subfolder names to help generate appropriate tags to be added to the JSON recipes. The parsed recipes will be saved in JSON files in the project output folder. The project should use the Google Drive API and the OpenAI API. The project should be structured as follows:
+- src/
+  - index.js
+  - googleDrive.js
+  - openAI.js
+  - utils.js
+- package.json
+- .env
+- googleDriveCredentials.json
+- README.md
+- .gitignore
+- output/
+
+Once the JSON recipe files have all be outputted, the program should post the recipes to Mealie using the API described here: https://mealie.browns.club/docs. The user should be able to specify the Mealie API URL and the API key in the .env file. The program should also include error handling and logging. The program should be able to run from the command line and accept arguments for the Google Drive folder ID.

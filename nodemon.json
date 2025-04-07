@@ -1,0 +1,11 @@
+{
+  "ignore": [
+    "output/*",
+    "*.log",
+    "node_modules/*"
+  ],
+  "watch": [
+    "src/"
+  ],
+  "ext": "js,json"
+}

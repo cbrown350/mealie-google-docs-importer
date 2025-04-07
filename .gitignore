@@ -1,0 +1,6 @@
+node_modules/
+.env
+googleDriveCredentials.json
+output/
+*.log
+test.http
