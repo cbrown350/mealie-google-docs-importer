@@ -16,7 +16,9 @@
     "node-fetch": "^3.3.1",
     "openai": "^4.92.0",
     "winston": "^3.8.2",
-    "yargs": "^17.7.2"
+    "yargs": "^17.7.2",
+    "mammoth": "^1.6.0",
+    "pdf2json": "^3.0.5"
   },
   "devDependencies": {
     "nodemon": "^3.1.9"
