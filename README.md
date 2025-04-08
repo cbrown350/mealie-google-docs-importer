@@ -1,6 +1,6 @@
 # Recipe Importer
 
-Imports recipes from Google Drive documents into Mealie. The program processes Google Docs from a specified folder, converts them to recipe JSON format using OpenAI, and uploads them to a Mealie instance.
+Imports recipes from Google Drive documents into Mealie. The program processes Google Docs from a specified folder, converts them to basic HTML using OpenAI, and uploads them to a Mealie instance.
 
 ## Setup
 
@@ -32,6 +32,7 @@ The folder ID can be found in the Google Drive URL when viewing the folder.
 - Processed recipes are saved as HTML files in the `output` directory
 - Logs are written to `error.log` and `combined.log`
 - Recipes are uploaded to your Mealie instance
+- Tags are added to the recipes based on the folder structure in Google Drive
 
 ## Error Handling
 
