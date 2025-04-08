@@ -30,9 +30,10 @@ async function main() {
         doc.tags = [ ...(doc.tags || []), "imported" ];
        
         // Convert doc to recipe Html using OpenAI with retry
-        const recipeHtml = await withRetry(() => 
-          processRecipeText(doc.content, doc.tags, doc.name, doc.folderName)
-        );
+        // const recipeHtml = await withRetry(() => 
+        //   processRecipeText(doc.content, doc.tags, doc.name, doc.folderName)
+        // );
+        const recipeHtml = doc.content
         
         // Upload to Mealie with retry
         const uploadedRecipe = await withRetry(() => 

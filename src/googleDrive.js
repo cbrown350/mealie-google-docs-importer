@@ -2,13 +2,18 @@ import { google } from 'googleapis';
 import { authenticate } from '@google-cloud/local-auth';
 import { createLogger } from './utils.js';
 import path from 'path';
-import { fileURLToPath } from 'url';
+import fs from 'fs/promises';
+import { fileURLToPath, URLSearchParams } from 'url';
 import mammoth from 'mammoth';
 import PDFParser from 'pdf2json';
+import http from 'http';
+import open from 'open';  
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const logger = createLogger();
 
+const credentialsPath = path.join(__dirname, '..', 'googleDriveCredentials.json');
+const tokenPath = path.join(__dirname, '..', 'googleDriveToken.json');
 
 // Helper function to convert string to boolean safely
 const strToBool = (str) => {
@@ -116,16 +121,224 @@ const FILE_HANDLERS = {
   }
 };
 
+// async function loadSavedToken() {
+//   try {
+//     const tokenContent = await fs.readFile(tokenPath);
+//     const token = JSON.parse(tokenContent);
+//     return {
+//       client_id: token.client_id,
+//       client_secret: token.client_secret,
+//       refresh_token: token.refresh_token,
+//       type: token.token_type,
+//       scope: token.scope
+//     };
+//   } catch (error) {
+//     logger.info('No saved Google token found or token invalid');
+//     return null;
+//   }
+// }
+
+// Modify the setupGoogleDrive function
 export async function setupGoogleDrive() {
-  const auth = await authenticate({
-    keyfilePath: path.join(__dirname, '..', 'googleDriveCredentials.json'),
-    scopes: [
-      'https://www.googleapis.com/auth/drive.readonly',
-      'https://www.googleapis.com/auth/drive.file'
-    ],
+  // let auth;
+  // const savedToken = await loadSavedToken();
+
+  // if (savedToken) {
+  //   try {
+  //     // Create OAuth2 client with saved credentials
+  //     const oauth2Client = new google.auth.OAuth2(
+  //       savedToken.client_id,
+  //       savedToken.client_secret,
+  //       'urn:ietf:wg:oauth:2.0:oob'
+  //     );
+
+  //     // Set credentials
+  //     oauth2Client.setCredentials({
+  //       refresh_token: savedToken.refresh_token,
+  //       scope: savedToken.scope,
+  //       token_type: savedToken.type
+  //     });
+
+  //     // Test the token by making a simple API call
+  //     const testDrive = google.drive({ version: 'v3', auth: oauth2Client });
+  //     await testDrive.files.list({ pageSize: 1 });
+
+  //     auth = oauth2Client;
+  //     logger.info('Successfully authenticated using saved Google token');
+  //   } catch (error) {
+  //     logger.debug(error.message);
+  //     logger.warn('Saved Google token is invalid, proceeding with new authentication');
+  //     auth = null;
+  //   }
+  // }
+
+  // if (!auth) {
+  //   // If no valid saved token, authenticate normally
+  //   auth = await authenticate({
+  //     keyfilePath: credentialsPath,
+  //     scopes: [
+  //       'https://www.googleapis.com/auth/drive.readonly',
+  //       'https://www.googleapis.com/auth/drive.file'
+  //     ],
+  //   });
+
+  //   // Save the new token
+  //   await fs.writeFile(
+  //     tokenPath,
+  //     JSON.stringify({
+  //       access_token: auth.credentials.access_token,
+  //       refresh_token: auth.credentials.refresh_token,
+  //       scope: auth.credentials.scope,
+  //       token_type: auth.credentials.token_type,
+  //       expiry_date: auth.credentials.expiry_date,
+  //       client_id: auth._clientId,
+  //       client_secret: auth._clientSecret
+  //     }, null, 2)
+  //   );
+  // }
+
+  // return google.drive({ version: 'v3', auth });
+
+  
+  return google.drive({ version: 'v3', auth: await authorize() });
+}
+
+
+/**
+ * Load previously authorized credentials from the save file.
+ */
+async function loadSavedCredentialsIfExist() {
+  try {
+    if (!await fs.access(tokenPath).then(() => true).catch(() => false)) {
+      logger.debug('Google token file does not exist');
+      return null;
+    }
+    const content = await fs.readFile(tokenPath);
+    const credentials = JSON.parse(content);
+    const client = google.auth.fromJSON(credentials);
+
+    // Test the token by making a simple API call
+    const testDrive = google.drive({ version: 'v3', auth: client });
+    await testDrive.files.list({ pageSize: 1 });
+    logger.info('Found a valid Google token');
+
+    return client;
+  } catch (err) {
+    logger.debug(err.message);
+    logger.info('Existing Google token invalid');
+    await fs.unlink(tokenPath).catch(err => {
+      logger.error(`Failed to delete invalid Google token file: ${err.message}`);
+    });
+    return null;
+  }
+}
+
+/**
+ * Save token credentials to a file.
+ */
+async function saveCredentials(client) {
+  try {
+    const content = await fs.readFile(credentialsPath);
+    const keys = JSON.parse(content);
+    const key = keys.installed || keys.web;
+    const payload = JSON.stringify({
+      type: 'authorized_user',
+      client_id: key.client_id,
+      client_secret: key.client_secret,
+      refresh_token: client.credentials.refresh_token,
+    });
+    await fs.writeFile(tokenPath, payload);
+  } catch (err) {
+    logger.error('Error loading/saving Google credentials:', err);
+  }
+}
+
+/**
+ * Authorize the client and obtain refresh tokens.
+ */
+async function authorize() {
+  let client = await loadSavedCredentialsIfExist();
+  if(client) {
+    return client;
+  }
+  logger.warn('Saved credentials invalid or not found, proceeding with new authentication');
+
+  // client = await authenticate({
+  //   scopes: [
+  //     'https://www.googleapis.com/auth/drive.readonly',
+  //     'https://www.googleapis.com/auth/drive.file'
+  //   ],
+  //   redirectUri: 'http://localhost:3000/oauth2callback',
+  //   keyfilePath: credentialsPath,
+  //   forceNewAuth: true,
+  //   accessType: 'offline',
+  //   prompt: 'consent'
+  // });
+
+  // if(client.credentials?.refresh_token) {
+  //   await saveCredentials(client);
+  //   logger.info('Google credentials saved successfully');
+  // } else {
+  //   logger.warn('No refresh token obtained. Please check your Google API settings.');
+  // }
+
+  // return client;
+  
+
+  // Read credentials file
+  const content = await fs.readFile(credentialsPath);
+  const keys = JSON.parse(content);
+  const key = keys.installed || keys.web;
+
+  // Create OAuth2 client
+  const oauth2Client = new google.auth.OAuth2(
+    key.client_id,
+    key.client_secret,
+    'http://localhost:3000/oauth2callback'
+  );
+
+  // Get auth code via local server
+  const code = await new Promise((resolve, reject) => {
+    const server = http.createServer(async (req, res) => {
+      try {
+        if (req.url.startsWith('/oauth2callback')) {
+          const params = new URLSearchParams(req.url.split('?')[1]);
+          const code = params.get('code');
+          res.end('Authentication successful! You can close this window.');
+          server.close();
+          resolve(code);
+        }
+      } catch (err) {
+        reject(err);
+      }
+    }).listen(3000);
+
+    // Generate authentication URL
+    const authUrl = oauth2Client.generateAuthUrl({
+      access_type: 'offline',
+      scope: [
+        'https://www.googleapis.com/auth/drive.readonly',
+        'https://www.googleapis.com/auth/drive.file'
+      ],
+      prompt: 'consent'
+    });
+
+    // Open the auth URL in browser
+    open(authUrl);
   });
 
-  return google.drive({ version: 'v3', auth });
+  // Exchange code for tokens
+  const { tokens } = await oauth2Client.getToken(code);
+  oauth2Client.setCredentials(tokens);
+
+  if (tokens.refresh_token) {    
+    await saveCredentials(oauth2Client);
+    logger.info('Google token credentials saved successfully');
+  } else{
+    logger.warn('No Google refresh token obtained. Please check your Google API settings.');
+  }
+
+  return oauth2Client;
 }
 
 async function streamToBuffer(stream) {

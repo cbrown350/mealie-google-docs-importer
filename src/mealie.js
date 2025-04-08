@@ -1,6 +1,8 @@
 import fetch from 'node-fetch';
 import { createLogger } from './utils.js';
 
+// TODO: Add support for uploading images to Mealie
+// TODO: Add updating cooking/prep times
 
 const logger = createLogger();
 
