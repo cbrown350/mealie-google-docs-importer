@@ -19,17 +19,17 @@ Imports recipes from Google Drive documents into Mealie. The program processes G
 
 ## Usage
 
-Run the program with a Google Drive folder ID:
+Run the program using the Google Drive folder ID set in the `.env` file:
 
 ```bash
-npm start -- --folderId YOUR_FOLDER_ID
+npm start
 ```
 
 The folder ID can be found in the Google Drive URL when viewing the folder.
 
 ## Output
 
-- Processed recipes are saved as JSON files in the `output` directory
+- Processed recipes are saved as HTML files in the `output` directory
 - Logs are written to `error.log` and `combined.log`
 - Recipes are uploaded to your Mealie instance
 
