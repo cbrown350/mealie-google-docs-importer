@@ -1,17 +1,30 @@
 import fetch from 'node-fetch';
 import { createLogger } from './utils.js';
 
+
 const logger = createLogger();
+
+const mealieInstanceApiUrl = process.env.MEALIE_API_URL
+if(!mealieInstanceApiUrl) {
+  logger.error('MEALIE_API_URL environment variable must be set');  
+  process.exit(1);
+}
+
+const mealieApiKey = process.env.MEALIE_API_KEY;
+if(!mealieApiKey) {
+  logger.error('MEALIE_API_KEY environment variable must be set');  
+  process.exit(1);
+}
 
 
 export async function uploadToMealie(recipe, recipeName) {
   const mealiePath = '/api/recipes/create/html-or-json';
-  const url = `${process.env.MEALIE_API_URL}${mealiePath}`;
+  const url = `${mealieInstanceApiUrl}${mealiePath}`;
   try {
     const response = await fetch(url, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${process.env.MEALIE_API_KEY}`,
+        'Authorization': `Bearer ${mealieApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -34,13 +47,13 @@ export async function uploadToMealie(recipe, recipeName) {
 
 export async function addRecipeTags(recipeSlug, tags) {
   const mealiePath = `/api/recipes/${recipeSlug}`;
-  const url = `${process.env.MEALIE_API_URL}${mealiePath}`;
+  const url = `${mealieInstanceApiUrl}${mealiePath}`;
   
   try {
     let response = await fetch(url, {
       method: 'GET',
       headers: {
-        'Authorization': `Bearer ${process.env.MEALIE_API_KEY}`,
+        'Authorization': `Bearer ${mealieApiKey}`,
         'Content-Type': 'application/json',
       }
     });
@@ -57,7 +70,7 @@ export async function addRecipeTags(recipeSlug, tags) {
     response = await fetch(url, {
       method: 'PATCH',
       headers: {
-        'Authorization': `Bearer ${process.env.MEALIE_API_KEY}`,
+        'Authorization': `Bearer ${mealieApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -81,14 +94,14 @@ export async function addRecipeTags(recipeSlug, tags) {
 
 export async function fetchMatchingTags(tags) {
   const tagsPath = '/api/organizers/tags';
-  const url = `${process.env.MEALIE_API_URL}${tagsPath}`;
+  const url = `${mealieInstanceApiUrl}${tagsPath}`;
   const existingTags = new Map();
   
   try {
     // Fetch all existing tags
     const response = await fetch(url, {
       headers: {
-        'Authorization': `Bearer ${process.env.MEALIE_API_KEY}`,
+        'Authorization': `Bearer ${mealieApiKey}`,
         'Content-Type': 'application/json',
       }
     });
@@ -113,7 +126,7 @@ export async function fetchMatchingTags(tags) {
       const createResponse = await fetch(url, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${process.env.MEALIE_API_KEY}`,
+          'Authorization': `Bearer ${mealieApiKey}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -142,13 +155,13 @@ export async function fetchMatchingTags(tags) {
 
 export async function fetchExistingTags() {
   const tagsPath = '/api/organizers/tags';
-  const url = `${process.env.MEALIE_API_URL}${tagsPath}`;
+  const url = `${mealieInstanceApiUrl}${tagsPath}`;
   
   try {
     // Fetch all existing tags
     const response = await fetch(url, {
       headers: {
-        'Authorization': `Bearer ${process.env.MEALIE_API_KEY}`,
+        'Authorization': `Bearer ${mealieApiKey}`,
         'Content-Type': 'application/json',
       }
     });

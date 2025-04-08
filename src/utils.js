@@ -21,7 +21,7 @@ export function createLogger() {
         return info;
       })(),
       winston.format.printf((info) => {
-        const { timestamp, level, message, additionalInfo, ...rest } = info;
+        const { timestamp, level, message, additionalInfo } = info;
         const ts = timestamp.slice(0, 19).replace('T', ' ');
         
         let log = `${ts} [${level}]: ${message}`;

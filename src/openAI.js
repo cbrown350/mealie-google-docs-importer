@@ -6,10 +6,23 @@ import { createLogger } from './utils.js';
 import { fetchExistingTags } from './mealie.js';
 import { JSDOM } from 'jsdom';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const logger = createLogger();
+
+const apiKey = process.env.OPENAI_API_KEY;
+if (!apiKey) {
+  logger.error('OPENAI_API_KEY environment variable must be set');
+  process.exit(1);
+}
+
+const model = process.env.OPENAI_MODEL || 'gpt-4o-mini-search-preview';
+if (!model) {
+  logger.error('OPENAI_MODEL environment variable must be set');
+  process.exit(1);
+}
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+  apiKey,
 });
 
 export async function processRecipeText(text, tags, fileName, folderName) {
@@ -24,7 +37,7 @@ Return only the JSON with no other text.`;
   let content;
   try {
     const completion = await openai.chat.completions.create({
-      model: process.env.OPENAI_MODEL,
+      model,
       messages: [ // Optionally, add a picture as a url href that you will search and find that best matches the recipe to the webpage that has a working url. Do not try to create a url that doesn't exist or doesn't work.
         { "role": "system", "content": "You are a recipe parser that converts recipe text to a nice, readable, simple html web page." },
         { "role": "user", "content": prompt }
