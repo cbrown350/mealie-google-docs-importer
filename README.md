@@ -13,9 +13,9 @@ Imports recipes from Google Drive documents into Mealie. The program processes G
 3. Create a new OAuth credential, download the credentials JSON file and save it as `googleDriveCredentials.json` in the project root
    - Make sure to set the redirect URI to `http://localhost:3000/oauth2callback` before downloading the JSON file
 4. Copy `.env.example` to `.env` and fill in your:
-   - OpenAI API key
-   - Mealie API URL
-   - Mealie API key
+   - OpenAI API settings
+   - Mealie API URL and key
+   - Google Drive root folder ID
 
 ## Usage
 

@@ -1,6 +1,4 @@
 import dotenv from 'dotenv';
-import yargs from 'yargs';
-import { hideBin } from 'yargs/helpers';
 import { setupGoogleDrive, getAllRecipeDocs } from './googleDrive.js';
 import { processRecipeText } from './openAI.js';
 import { uploadToMealie } from './mealie.js';
@@ -30,7 +28,7 @@ async function main() {
     for (const doc of recipeDocs) {
       try {
         // Convert doc to recipe JSON using OpenAI
-        const recipeJson = await processRecipeText(doc.content, doc.tags);
+        const recipeJson = await processRecipeText(doc.content, doc.tags, doc.folderName);
         
         // Upload to Mealie
         await uploadToMealie(recipeJson);

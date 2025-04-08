@@ -7,20 +7,41 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
-    "debug": "nodemon --inspect src/index.js"
+    "debug": "nodemon --inspect src/index.js",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
+    "test:watch": "jest --watch"
   },
   "dependencies": {
     "@google-cloud/local-auth": "^2.1.0",
     "dotenv": "^16.0.3",
     "googleapis": "^118.0.0",
+    "mammoth": "^1.6.0",
     "node-fetch": "^3.3.1",
     "openai": "^4.92.0",
+    "pdf2json": "^3.0.5",
     "winston": "^3.8.2",
-    "yargs": "^17.7.2",
-    "mammoth": "^1.6.0",
-    "pdf2json": "^3.0.5"
+    "yargs": "^17.7.2"
   },
   "devDependencies": {
+    "jest": "^29.7.0",
     "nodemon": "^3.1.9"
+  },
+  "jest": {
+    "transform": {
+      "^.+\\.mjs$": "babel-jest"
+    },
+    "globals": {
+      "ts-jest": {
+        "useESM": true
+      }
+    }, 
+    "testEnvironment": "node",
+    "moduleNameMapper": {
+      "^(\\.{1,2}/.*)\\.js$": "$1"
+    },
+    "testMatch": [
+      "**/__tests__/**/*.test.js",
+      "**/?(*.)+(spec|test).js"
+    ]
   }
 }

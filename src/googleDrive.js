@@ -9,6 +9,14 @@ import PDFParser from 'pdf2json';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const logger = createLogger();
 
+
+// Helper function to convert string to boolean safely
+const strToBool = (str) => {
+  return str?.toLowerCase() === 'true' || str === '1';
+};
+
+const includeRootFolder = strToBool(process.env.INCLUDE_ROOT_FOLDER_AS_TAG);
+
 // Helper function to parse PDF buffer
 async function parsePDF(buffer) {
   return new Promise((resolve, reject) => {
@@ -26,7 +34,7 @@ async function parsePDF(buffer) {
     });
     
     pdfParser.on("pdfParser_dataError", (error) => {
-      reject(error);
+      reject(new Error(error));
     });
 
     pdfParser.parseBuffer(buffer);
@@ -182,6 +190,19 @@ async function getFileContent(drive, file) {
   }
 }
 
+async function getFolderName(drive, folderId) {
+  try {
+    const response = await drive.files.get({
+      fileId: folderId,
+      fields: 'name'
+    });
+    return response.data.name;
+  } catch (error) {
+    logger.error(`Error getting folder name for ${folderId}: ${error.message}`);
+    return null;
+  }
+}
+
 async function listFolderContents(drive, folderId) {
   const mimeTypes = Object.keys(FILE_HANDLERS);
   const mimeTypeQuery = mimeTypes.map(type => `mimeType = '${type}'`).join(' or ');
@@ -197,22 +218,31 @@ async function listFolderContents(drive, folderId) {
 export async function getAllRecipeDocs(drive, rootFolderId) {
   const recipes = [];
   
-  async function processFolder(folderId, parentTags = []) {
+  async function processFolder(folderId, parentTags = [], isRoot = false) {
+    // Get the current folder's name
+    const folderName = await getFolderName(drive, folderId);
+    // Create current tags array including the current folder name
+    const currentTags = isRoot && !includeRootFolder ? [] : [...parentTags, folderName];
+    
     const files = await listFolderContents(drive, folderId);
     
     for (const file of files) {
       try {
         if (file.mimeType === 'application/vnd.google-apps.folder') {
-          // Add folder name as a tag and process contents
-          await processFolder(file.id, [...parentTags, file.name]);
+          // Process subfolder with current tags
+          await processFolder(file.id, currentTags);
         } else if (FILE_HANDLERS.hasOwnProperty(file.mimeType)) {
           const content = await getFileContent(drive, file);
           if (content) {
+            // Log the tags being added
+            logger.info(`Adding tags for ${file.name}: ${currentTags.join(', ')}`);
+            
             recipes.push({
               name: file.name,
               content,
               mimeType: file.mimeType,
-              tags: parentTags,
+              tags: currentTags,
+              folderName
             });
             logger.info(`Successfully processed ${file.name} (${file.mimeType})`);
           }
@@ -223,6 +253,6 @@ export async function getAllRecipeDocs(drive, rootFolderId) {
     }
   }
   
-  await processFolder(rootFolderId);
+  await processFolder(rootFolderId, [], true);
   return recipes;
 }
