@@ -62,20 +62,14 @@ async function handleDocFile(drive, fileId, fileName) {
         mimeType: 'text/plain'
       });
 
-      // Clean up the temporary Google Doc
-      await drive.files.delete({
-        fileId: convertedFileId
-      });
-
       return exportResponse.data;
-    } catch (error) {
+    } finally {
       // Make sure to clean up even if export fails
       await drive.files.delete({
         fileId: convertedFileId
       }).catch(deleteError => {
         logger.error(`Error deleting temporary file: ${deleteError.message}`);
       });
-      throw error;
     }
   } catch (error) {
     logger.error(`Error converting .doc file: ${error.message}`);
