@@ -9,6 +9,8 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       - uses: actions/checkout@v4
@@ -16,7 +18,7 @@ jobs:
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "23"
+          node-version: "20"
           cache: "npm"
 
       - name: Install dependencies
@@ -28,25 +30,12 @@ jobs:
       - name: Run tests with coverage
         run: npm test -- --coverage
 
-      - name: Create badges directory
-        run: mkdir -p .github/badges
-
-      - name: Get Coverage
-        id: coverage
-        run: |
-          COVERAGE=$(node -p "JSON.parse(require('fs').readFileSync('coverage/coverage-summary.json')).total.lines.pct")
-          COLOR=$(node -e "const c = parseFloat('$COVERAGE'); process.stdout.write(c > 90 ? 'green' : c > 70 ? 'yellow' : 'red')")
-          echo "percentage=$COVERAGE" >> $GITHUB_OUTPUT
-          echo "color=$COLOR" >> $GITHUB_OUTPUT
-
-      - name: Generate coverage badge
-        uses: jossef/action-badge@v2.0.1
+      - name: Generate Coverage Badge
+        uses: vshymanskyy/action-badges@v1
         with:
-          icon: coverage
-          label: coverage
-          message: ${{ steps.coverage.outputs.percentage }}%
-          color: ${{ steps.coverage.outputs.color }}
+          coverage-percent: ${{ steps.coverage.outputs.percentage }}
           path: .github/badges/coverage.svg
+          label: coverage
 
       - name: Upload coverage reports to GitHub
         uses: actions/upload-artifact@v4
@@ -55,7 +44,7 @@ jobs:
           path: coverage/
 
       - name: Commit and push badge
-        if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/master'
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
