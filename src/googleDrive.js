@@ -23,14 +23,13 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const credentialsPath = path.join(__dirname, '..', 'googleDriveCredentials.json');
 const tokenPath = path.join(__dirname, '..', 'googleDriveToken.json');
 
+const logger = createLogger();
+
+
 // Helper function to convert string to boolean safely
 const strToBool = (str) => {
   return str?.toLowerCase() === 'true' || str === '1';
 };
-
-const includeRootFolder = strToBool(process.env.INCLUDE_ROOT_FOLDER_AS_TAG);
-
-const logger = createLogger();
 
 
 /**
@@ -403,6 +402,7 @@ export async function getAllRecipeDocs(drive, rootFolderId) {
     // Get the current folder's name
     const folderName = await getFolderName(drive, folderId);
     // Create current tags array including the current folder name
+    const includeRootFolder = strToBool(process.env.INCLUDE_ROOT_FOLDER_AS_TAG);
     const currentTags = isRoot && !includeRootFolder ? [] : [...parentTags, folderName];
     
     const files = await listFolderContents(drive, folderId);
