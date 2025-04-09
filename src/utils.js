@@ -64,6 +64,9 @@ export function createLogger() {
 export async function withRetry(operation, maxRetries = 3, baseDelay = 1000) {
   let lastError;
   
+  const logger = createLogger();
+  const operationName = operation.name || '<anonymous>';
+  
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {
       return await operation();
@@ -71,7 +74,7 @@ export async function withRetry(operation, maxRetries = 3, baseDelay = 1000) {
       lastError = error;
       if (attempt < maxRetries - 1) {
         const delay = baseDelay * Math.pow(2, attempt);
-        console.log(`Attempt ${attempt + 1} failed, retrying in ${delay}ms...`);
+        logger.info(`'${operationName}: attempt ${attempt + 1} failed, retrying in ${delay}ms...`);
         await new Promise(resolve => setTimeout(resolve, delay));
       }
     }
