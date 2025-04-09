@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [master]
   pull_request:
-    branches: [main]
+    branches: [master]
 
 jobs:
   test:
@@ -28,12 +28,17 @@ jobs:
       - name: Run tests with coverage
         run: npm test -- --coverage
 
-      - name: Upload coverage reports to GitHub
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-report
-          path: coverage/
-          
+      - name: Create badges directory
+        run: mkdir -p .github/badges
+
+      - name: Get Coverage
+        id: coverage
+        run: |
+          COVERAGE=$(node -p "JSON.parse(require('fs').readFileSync('coverage/coverage-summary.json')).total.lines.pct")
+          COLOR=$(node -e "const c = parseFloat('$COVERAGE'); process.stdout.write(c > 90 ? 'green' : c > 70 ? 'yellow' : 'red')")
+          echo "percentage=$COVERAGE" >> $GITHUB_OUTPUT
+          echo "color=$COLOR" >> $GITHUB_OUTPUT
+
       - name: Generate coverage badge
         uses: jossef/action-badge@v2.0.1
         with:
@@ -42,3 +47,18 @@ jobs:
           message: ${{ steps.coverage.outputs.percentage }}%
           color: ${{ steps.coverage.outputs.color }}
           path: .github/badges/coverage.svg
+
+      - name: Upload coverage reports to GitHub
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/
+
+      - name: Commit and push badge
+        if: github.ref == 'refs/heads/main'
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add .github/badges/coverage.svg
+          git commit -m "Update coverage badge" || exit 0
+          git push
