@@ -30,12 +30,19 @@ jobs:
       - name: Run tests with coverage
         run: npm test -- --coverage
 
-      - name: Generate Coverage Badge
-        uses: vshymanskyy/action-badges@v1
-        with:
-          coverage-percent: ${{ steps.coverage.outputs.percentage }}
-          path: .github/badges/coverage.svg
-          label: coverage
+      - name: Get Coverage
+        id: coverage
+        run: |
+          COVERAGE=$(node -p "JSON.parse(require('fs').readFileSync('coverage/coverage-summary.json')).total.lines.pct")
+          echo "percentage=$COVERAGE" >> $GITHUB_OUTPUT
+
+      - name: Create badges directory
+        run: mkdir -p .github/badges
+
+      - name: Generate coverage badge
+        run: |
+          curl -o .github/badges/coverage.svg \
+          "https://img.shields.io/badge/coverage-${{ steps.coverage.outputs.percentage }}%25-${{ steps.coverage.outputs.percentage >= 80 && 'brightgreen' || steps.coverage.outputs.percentage >= 70 && 'yellow' || 'red' }}"
 
       - name: Upload coverage reports to GitHub
         uses: actions/upload-artifact@v4
