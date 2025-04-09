@@ -13,6 +13,8 @@ import { Buffer } from 'buffer';
 
 dotenv.config();
 
+// TODO: Add image handling
+
 const oauth2RedirectPort = process.env.OAUTH2_REDIRECT_PORT || 3000;
 const oauth2RedirectUrl = process.env.OAUTH2_REDIRECT_URL || `http://localhost:${oauth2RedirectPort}/oauth2callback`;
 const oauth2Scopes = [
