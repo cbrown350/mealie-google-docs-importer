@@ -1,5 +1,6 @@
 import { jest } from '@jest/globals';
 import { mockGoogleDriveFile } from './test-helpers.js';
+import b2s from 'buffer-to-stream';
 
 // Mock googleapis
 jest.unstable_mockModule('googleapis', () => ({
@@ -16,13 +17,14 @@ const { setupGoogleDrive, getAllRecipeDocs } = await import('../src/googleDrive.
 
 // Mock fs/promises
 jest.unstable_mockModule('fs/promises', () => ({
-  default: {
-    readFile: jest.fn(),
-    writeFile: jest.fn(),
-    access: jest.fn(),
-    unlink: jest.fn()
-  }
-}));
+    default: {
+        readFile: jest.fn(),
+        writeFile: jest.fn(),
+        access: jest.fn(),
+        unlink: jest.fn()
+    }
+  })
+);
 
 const { google } = await import('googleapis');
 const fs = (await import('fs/promises')).default;
@@ -193,6 +195,25 @@ describe('getAllRecipeDocs with nested folders', () => {
     const recipes = await getAllRecipeDocs(mockDrive, 'mixed-folder-id');
 
     // Should only process supported file types
+    expect(recipes).toHaveLength(1);
+  });
+
+  it('should handle PDFs in folders', async () => {
+    // Load actual PDF data from Self-Rising Flour Recipe.pdf
+    const pdfDataBuffer = jest.requireActual('fs').readFileSync('./__tests__/Self-Rising Flour Recipe.pdf');
+    const mockPdf = mockGoogleDriveFile('Self-Rising Flour Recipe.pdf', 'application/pdf', b2s(pdfDataBuffer));
+
+    mockDrive.files.get.mockResolvedValue({ data: { name: mockRootFolder.name } });
+    mockDrive.files.list.mockResolvedValue({
+      data: { files: [ mockPdf ] }
+    });
+
+    mockDrive.files.export.mockResolvedValue({ data: mockDoc.content });
+    mockDrive.files.get.mockResolvedValue({ data: mockPdf.content });
+
+    const recipes = await getAllRecipeDocs(mockDrive, 'mixed-folder-id');
+
+    // Should have processed PDF
     expect(recipes).toHaveLength(1);
   });
 

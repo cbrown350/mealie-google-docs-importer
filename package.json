@@ -27,6 +27,7 @@
     "@babel/preset-env": "^7.26.9",
     "@babel/preset-typescript": "^7.27.0",
     "babel-jest": "^29.7.0",
+    "buffer-to-stream": "^1.0.0",
     "eslint": "^9.24.0",
     "eslint-plugin-jest": "^28.11.0",
     "jest": "^29.7.0",
@@ -59,8 +60,7 @@
       "**/__tests__/**/*.test.js",
       "**/?(*.)+(spec|test).js"
     ],
-    "transform": {
-    }
+    "transform": {}
   },
   "nodemonConfig": {
     "ext": "js,json",
