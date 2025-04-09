@@ -119,6 +119,9 @@ export async function addRecipeTags(recipeSlug, tags) {
  * @returns {Promise<Array>} Array of complete tag objects for Mealie API
  */
 export async function fetchMatchingTags(tags) {
+  if (!tags || !Array.isArray(tags) || tags.length === 0) {
+    return [];  
+  }
   const tagsPath = '/api/organizers/tags';
   const url = `${mealieInstanceApiUrl}${tagsPath}`;
   const existingTags = new Map();
