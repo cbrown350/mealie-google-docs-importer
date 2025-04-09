@@ -6,3 +6,4 @@ output/
 *.log
 test.http
 scratch.txt
+coverage
