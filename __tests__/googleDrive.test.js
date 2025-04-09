@@ -7,28 +7,68 @@ import process from 'node:process';
 jest.unstable_mockModule('googleapis', () => ({
   google: {
     auth: {
-      OAuth2: jest.fn(),
+      OAuth2: jest.fn(() => ({
+        generateAuthUrl: jest.fn().mockReturnValue('https://mock-auth-url'),
+        getToken: jest.fn().mockResolvedValue({ 
+          tokens: { 
+            refresh_token: 'mock-refresh-token',
+            access_token: 'mock-access-token'
+          } 
+        }),
+        setCredentials: jest.fn()
+      })),
       fromJSON: jest.fn()
     },
     drive: jest.fn()
   }
 }));
-// Dynamically import the modules since using jest.unstable_mockModule
-const { setupGoogleDrive, getAllRecipeDocs } = await import('../src/googleDrive.js');
 
 // Mock fs/promises
 jest.unstable_mockModule('fs/promises', () => ({
-    default: {
-        readFile: jest.fn(),
-        writeFile: jest.fn(),
-        access: jest.fn(),
-        unlink: jest.fn()
-    }
-  })
-);
+  // Mocking the fs/promises module
+  default: {
+    readFile: jest.fn(),
+    writeFile: jest.fn(),
+    access: jest.fn(),
+    unlink: jest.fn()
+  },
+  // Mocking the default export of fs/promises
+  readFile: jest.fn(),
+}));
+
+jest.unstable_mockModule('open', () => ({
+  default: jest.fn()
+}));
+
+jest.unstable_mockModule('http', () => ({
+  default: {
+    createServer: jest.fn((handler) => {
+      const server = {
+        handler,
+        listen: jest.fn(function() {
+          // Properly wait until next tick to simulate server startup
+          setTimeout(() => {
+            this.handler({
+              url: '/oauth2callback?code=mock-auth-code'
+            }, {
+              end: jest.fn()
+            });
+          }, 0);
+          return this;
+        }),
+        close: jest.fn()
+      };
+      return server;
+    })
+  }
+}));
+
 
 const { google } = await import('googleapis');
 const fs = (await import('fs/promises')).default;
+const open = (await import('open')).default;
+// Dynamically import the modules since using jest.unstable_mockModule
+const { setupGoogleDrive, getAllRecipeDocs } = await import('../src/googleDrive.js');
 
 describe('Google Drive', () => {
   const mockDrive = {
@@ -42,6 +82,7 @@ describe('Google Drive', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     google.drive.mockReturnValue(mockDrive);
+    open.mockClear();
   });
 
   describe('setupGoogleDrive', () => {
@@ -60,6 +101,69 @@ describe('Google Drive', () => {
         auth: mockCredentials
       });
     });
+  });  
+
+  it('should handle new OAuth2 authentication flow', async () => {
+    // Mock file access to return false (no existing token)
+    fs.access.mockRejectedValue(new Error('File not found'));
+    
+    // Mock reading credentials file
+    const mockCredentials = {
+      installed: {
+        client_id: 'mock-client-id',
+        client_secret: 'mock-client-secret'
+      }
+    };
+    fs.readFile
+      .mockResolvedValueOnce(JSON.stringify(mockCredentials)) // For credentials file
+      .mockResolvedValueOnce(JSON.stringify({
+        web: {
+          client_id: 'mock-client-id',
+          client_secret: 'mock-client-secret',
+          // refresh_token: 'mock-refresh-token'
+        }
+      })); // For token file
+
+    // Mock OAuth2 client with auth methods
+    const mockOAuth2Client = {
+      generateAuthUrl: jest.fn().mockReturnValue('https://mock-auth-url'),
+      getToken: jest.fn().mockResolvedValue({ 
+        tokens: { 
+          refresh_token: 'mock-refresh-token',
+          access_token: 'mock-access-token'
+        }
+      }),
+      setCredentials: jest.fn().mockImplementation((tokens) => {
+        mockOAuth2Client.credentials = tokens;
+      })
+    };
+    google.auth.OAuth2.mockImplementation(() => mockOAuth2Client);
+
+    open.mockImplementation((url) => {
+      // Simulate user clicking the auth URL and redirecting back to the server
+      expect(url).toBe('https://mock-auth-url');
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          resolve('mock-auth-code'); // Simulate user providing auth code
+        }, 200);
+      } 
+      );
+    });
+
+    // Execute setupGoogleDrive
+    const result = await setupGoogleDrive();
+
+    // Verify the OAuth2 flow
+    expect(mockOAuth2Client.generateAuthUrl).toHaveBeenCalledWith({
+      access_type: 'offline',
+      scope: expect.any(Array),
+      prompt: 'consent'
+    });
+    expect(mockOAuth2Client.getToken).toHaveBeenCalledWith('mock-auth-code');
+    expect(mockOAuth2Client.setCredentials).toHaveBeenCalled();
+    expect(open).toHaveBeenCalledWith('https://mock-auth-url');
+    expect(fs.writeFile).toHaveBeenCalled(); // Should save new token
+    expect(result).toBe(mockDrive);
   });
 
   describe('getAllRecipeDocs', () => {
