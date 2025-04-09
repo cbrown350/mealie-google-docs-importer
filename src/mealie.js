@@ -22,6 +22,13 @@ if(!mealieApiKey) {
 }
 
 
+/**
+ * Uploads recipe content to Mealie
+ * @param {string} recipe - Recipe content in HTML format
+ * @param {string} recipeName - Name of the recipe
+ * @returns {Promise<Object>} Uploaded recipe data including slug
+ * @throws {Error} If upload fails
+ */
 export async function uploadToMealie(recipe, recipeName) {
   const mealiePath = '/api/recipes/create/html-or-json';
   const url = `${mealieInstanceApiUrl}${mealiePath}`;
@@ -50,6 +57,14 @@ export async function uploadToMealie(recipe, recipeName) {
   }
 }
 
+
+/**
+ * Adds tags to a recipe in Mealie
+ * @param {string} recipeSlug - Unique identifier for the recipe
+ * @param {Array<string>} tags - Array of tag names to add
+ * @returns {Promise<Object>} Updated recipe data
+ * @throws {Error} If adding tags fails
+ */
 export async function addRecipeTags(recipeSlug, tags) {
   const mealiePath = `/api/recipes/${recipeSlug}`;
   const url = `${mealieInstanceApiUrl}${mealiePath}`;
@@ -97,6 +112,12 @@ export async function addRecipeTags(recipeSlug, tags) {
   }
 }
 
+
+/**
+ * Matches provided tag names with existing Mealie tags, creating new ones if needed
+ * @param {Array<string>} tags - Array of tag names
+ * @returns {Promise<Array>} Array of complete tag objects for Mealie API
+ */
 export async function fetchMatchingTags(tags) {
   const tagsPath = '/api/organizers/tags';
   const url = `${mealieInstanceApiUrl}${tagsPath}`;
@@ -158,6 +179,13 @@ export async function fetchMatchingTags(tags) {
   }
 }
 
+
+/**
+ * Fetches all existing tags from the Mealie API.
+ * 
+ * @returns {Promise<Array>} Array of tag objects from the Mealie instance
+ * @throws {Error} If the API call fails
+ */
 export async function fetchExistingTags() {
   const tagsPath = '/api/organizers/tags';
   const url = `${mealieInstanceApiUrl}${tagsPath}`;

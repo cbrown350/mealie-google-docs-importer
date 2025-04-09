@@ -39,7 +39,7 @@ async function main() {
           uploadToMealie(recipeHtml, doc.name)
         );
         
-        // Add tags if present with retry
+        // Add tags if present to recipes in Mealie with retry
         if (doc.tags && doc.tags.length > 0) {
           await withRetry(() => 
             addRecipeTags(uploadedRecipe, doc.tags)

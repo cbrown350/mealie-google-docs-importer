@@ -3,6 +3,11 @@ import util from 'util';
 
 const MAX_OBJECT_DEPTH = 3; // Set desired depth
 
+
+/**
+ * Creates and configures a Winston logger
+ * @returns {Object} Configured logger instance with file and console transports
+ */
 export function createLogger() {
   return winston.createLogger({
     level: process.env.LOG_LEVEL || 'info',
@@ -46,6 +51,15 @@ export function createLogger() {
   });
 }
 
+
+/**
+ * Executes an operation with exponential backoff retry logic
+ * @param {Function} operation - Async function to execute
+ * @param {number} maxRetries - Maximum number of retry attempts (default: 3)
+ * @param {number} baseDelay - Base delay in ms between retries (default: 1000)
+ * @returns {Promise<*>} Result of the operation
+ * @throws {Error} Last error encountered if all retries fail
+ */
 export async function withRetry(operation, maxRetries = 3, baseDelay = 1000) {
   let lastError;
   

@@ -32,7 +32,12 @@ const includeRootFolder = strToBool(process.env.INCLUDE_ROOT_FOLDER_AS_TAG);
 
 const logger = createLogger();
 
-// Helper function to parse PDF buffer
+
+/**
+ * Parses a PDF buffer to extract text content
+ * @param {Buffer} buffer - PDF file buffer
+ * @returns {Promise<string>} Extracted text content from the PDF
+ */
 async function parsePDF(buffer) {
   return new Promise((resolve, reject) => {
     const pdfParser = new PDFParser();
@@ -56,7 +61,19 @@ async function parsePDF(buffer) {
   });
 }
 
-// Helper function to handle .doc files by converting to Google Doc
+
+/**
+ * Converts a Microsoft Word (.doc) file to plain text by:
+ * 1. Creating a temporary Google Doc copy
+ * 2. Exporting that copy as plain text
+ * 3. Deleting the temporary copy
+ *
+ * @param {drive} drive - The Google Drive client instance
+ * @param {string} fileId - The ID of the .doc file to convert
+ * @param {string} fileName - The name of the file (used for naming the temporary copy)
+ * @returns {Promise<string>} The plain text content of the document
+ * @throws {Error} If the conversion process fails
+ */
 async function handleDocFile(drive, fileId, fileName) {
   try {
     // Copy the file as a Google Doc
@@ -91,6 +108,7 @@ async function handleDocFile(drive, fileId, fileName) {
     throw error;
   }
 }
+
 
 // Define supported MIME types and their handlers
 const FILE_HANDLERS = {
@@ -129,14 +147,24 @@ const FILE_HANDLERS = {
       return await parsePDF(buffer);
     }
   }
-};
+}
 
+
+/**
+ * Sets up Google Drive API client
+ * @returns {Object} Configured Google Drive API client
+ */
 export async function setupGoogleDrive() {  
   return google.drive({ version: 'v3', auth: await authorize() });
 }
 
+
 /**
- * Load previously authorized credentials from the save file.
+ * Attempts to load saved Google Drive credentials from the local token file.
+ * Validates the loaded token by making a test API call.
+ *
+ * @returns {Promise<OAuth2Client|null>} The authenticated Google client if valid credentials exist,
+ *                                      null otherwise
  */
 async function loadSavedCredentialsIfExist() {
   try {
@@ -164,8 +192,10 @@ async function loadSavedCredentialsIfExist() {
   }
 }
 
+
 /**
- * Save token credentials to a file.
+ * Saves OAuth2 credentials to the filesystem
+ * @param {Object} client - Google API client with credentials
  */
 async function saveCredentials(client) {
   try {
@@ -184,8 +214,10 @@ async function saveCredentials(client) {
   }
 }
 
+
 /**
- * Authorize the client and obtain refresh tokens.
+ * Authorizes with Google API using OAuth2
+ * @returns {Object} Authorized Google API client
  */
 async function authorize() {
   let client = await loadSavedCredentialsIfExist();
@@ -248,6 +280,12 @@ async function authorize() {
   return oauth2Client;
 }
 
+
+/**
+ * Converts a readable stream to a buffer
+ * @param {Stream} stream - Readable stream
+ * @returns {Promise<Buffer>} Buffer containing stream data
+ */
 async function streamToBuffer(stream) {
   const chunks = [];
   for await (const chunk of stream) {
@@ -256,6 +294,13 @@ async function streamToBuffer(stream) {
   return Buffer.concat(chunks);
 }
 
+
+/**
+ * Gets content from a Google Drive file
+ * @param {Object} drive - Google Drive API client
+ * @param {Object} file - File metadata object
+ * @returns {Promise<string|null>} File content as text or null if extraction failed
+ */
 async function getFileContent(drive, file) {
   try {
     const handler = FILE_HANDLERS[file.mimeType];
@@ -304,6 +349,14 @@ async function getFileContent(drive, file) {
   }
 }
 
+
+/**
+ * Retrieves the name of a Google Drive folder.
+ *
+ * @param {drive} drive - The Google Drive client instance
+ * @param {string} folderId - The ID of the folder to retrieve the name for
+ * @returns {Promise<string|null>} The folder name if successful, null if an error occurs
+ */
 async function getFolderName(drive, folderId) {
   try {
     const response = await drive.files.get({
@@ -317,6 +370,13 @@ async function getFolderName(drive, folderId) {
   }
 }
 
+
+/**
+ * Lists all files and folders within a Google Drive folder
+ * @param {Object} drive - Google Drive API client
+ * @param {string} folderId - ID of the folder to list
+ * @returns {Promise<Array>} Array of file and folder metadata objects
+ */
 async function listFolderContents(drive, folderId) {
   const mimeTypes = Object.keys(FILE_HANDLERS);
   const mimeTypeQuery = mimeTypes.map(type => `mimeType = '${type}'`).join(' or ');
@@ -329,6 +389,13 @@ async function listFolderContents(drive, folderId) {
   return response.data.files;
 }
 
+
+/**
+ * Recursively retrieves all recipe documents from a Google Drive folder and its subfolders
+ * @param {Object} drive - Google Drive API client
+ * @param {string} rootFolderId - ID of the root folder to search
+ * @returns {Promise<Array>} Array of recipe documents with content, metadata and folder-based tags
+ */
 export async function getAllRecipeDocs(drive, rootFolderId) {
   const recipes = [];
   
