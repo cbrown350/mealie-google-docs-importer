@@ -1,6 +1,7 @@
-import { jest } from '@jest/globals';
+import { jest, describe, it, expect, beforeEach } from '@jest/globals';
 import { mockGoogleDriveFile } from './test-helpers.js';
 import b2s from 'buffer-to-stream';
+import process from 'node:process';
 
 // Mock googleapis
 jest.unstable_mockModule('googleapis', () => ({

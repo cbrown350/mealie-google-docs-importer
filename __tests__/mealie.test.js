@@ -1,5 +1,6 @@
-import { jest } from '@jest/globals';
+import { jest, describe, it, expect, beforeEach } from '@jest/globals';
 import { mockFetchResponse } from './test-helpers.js';
+import process from 'node:process';
 
 // Mock environment variables
 process.env.MEALIE_API_URL = 'https://mealie.test';

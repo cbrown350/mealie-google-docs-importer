@@ -9,7 +9,7 @@ import http from 'http';
 import open from 'open';  
 import dotenv from 'dotenv';
 import process from 'process';
-import Buffer from 'buffer';
+import { Buffer } from 'buffer';
 
 dotenv.config();
 
