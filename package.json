@@ -30,35 +30,43 @@
     "eslint": "^9.24.0",
     "eslint-plugin-jest": "^28.11.0",
     "jest": "^29.7.0",
+    "jest-environment-node": "^29.7.0",
+    "jest-mock": "^29.7.0",
     "nodemon": "^3.1.9"
-  },  
-  "nodemonConfig": {
-    "ignore": ["output/*", "*.log", "node_modules/*"],
-    "watch": ["src/"],
-    "ext": "js,json"
+  },
+  "babel": {
+    "presets": [
+      "@babel/preset-env"
+    ]
   },
   "jest": {
-    "transform": {
-      "^.+\\.mjs$": "babel-jest",
-      "^.+\\.[jt]sx?$": "babel-jest"
-    },
     "globals": {
       "ts-jest": {
         "useESM": true
       }
     },
-    "testEnvironment": "node",
     "moduleNameMapper": {
       "^(\\.{1,2}/.*)\\.js$": "$1"
     },
+    "testEnvironment": "node",
     "testMatch": [
       "**/__tests__/**/*.test.js",
       "**/?(*.)+(spec|test).js"
-    ]
+    ],
+    "transform": {
+      "^.+\\.mjs$": "babel-jest",
+      "^.+\\.[jt]sx?$": "babel-jest"
+    }
   },
-  "babel": {
-    "presets": [
-      "@babel/preset-env"
+  "nodemonConfig": {
+    "ext": "js,json",
+    "ignore": [
+      "output/*",
+      "*.log",
+      "node_modules/*"
+    ],
+    "watch": [
+      "src/"
     ]
   }
 }
