@@ -28,9 +28,7 @@ jobs:
         run: npm run lint
 
       - name: Run tests with coverage
-        run: |
-          touch googleDriveCredentials.json
-          npm test -- --coverage
+        run: npm test -- --coverage
 
       - name: Get Coverage
         id: coverage

@@ -55,8 +55,10 @@
   "jest": {
     "collectCoverage": true,
     "coverageReporters": [
-      "text",
-      "lcov"
+      "json",
+      "json-summary",
+      "lcov",
+      "text"
     ],
     "globals": {
       "ts-jest": {
