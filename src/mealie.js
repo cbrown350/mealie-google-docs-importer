@@ -1,5 +1,8 @@
 import fetch from 'node-fetch';
 import { createLogger } from './utils.js';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 // TODO: Add support for uploading images to Mealie
 // TODO: Add updating cooking/prep times

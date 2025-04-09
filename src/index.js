@@ -1,22 +1,26 @@
-import dotenv from 'dotenv';
 import { setupGoogleDrive, getAllRecipeDocs } from './googleDrive.js';
-import { processRecipeText } from './openAI.js';
 import { uploadToMealie, addRecipeTags } from './mealie.js';
 import { createLogger, withRetry } from './utils.js';
+import dotenv from 'dotenv';
 
 dotenv.config();
+
 const logger = createLogger();
 
-const folderId = process.env.GOOGLE_DRIVE_FOLDER_ID;
-if (!folderId) {
-  logger.error('GOOGLE_DRIVE_FOLDER_ID environment variable must be set');
-  process.exit(1);
-}
+const args = process.argv.slice(2);
+const folderId = args[0] || process.env.GOOGLE_DRIVE_FOLDER_ID;
+
+const importedTag = process.env.IMPORTED_TAG || "imported";
 
 async function main() {
   try {
-    logger.info('Starting recipe import process');
+    if (!folderId) {
+      logger.error('GOOGLE_DRIVE_FOLDER_ID environment variable must be set');
+      process.exit(1);
+    }
     logger.info(`Using folder ID: ${folderId}`);
+    
+    logger.info('Starting recipe import process');
     
     // Setup Google Drive client
     const driveClient = await setupGoogleDrive();
@@ -27,12 +31,7 @@ async function main() {
     // Process each recipe
     for (const doc of recipeDocs) {
       try {
-        doc.tags = [ ...(doc.tags || []), "imported" ];
-       
-        // Convert doc to recipe Html using OpenAI with retry
-        // const recipeHtml = await withRetry(() => 
-        //   processRecipeText(doc.content, doc.tags, doc.name, doc.folderName)
-        // );
+        doc.tags = [ ...(doc.tags || []), importedTag ];
         const recipeHtml = doc.content
         
         // Upload to Mealie with retry
@@ -55,7 +54,8 @@ async function main() {
     
     logger.info('Recipe import process completed');
   } catch (error) {
-    logger.error('Fatal error:', error);
+    logger.error('Fatal error');
+    logger.debug('Error details: ', error);
     process.exit(1);
   }
 }
