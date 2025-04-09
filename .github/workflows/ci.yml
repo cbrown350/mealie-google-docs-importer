@@ -56,11 +56,11 @@ jobs:
       - name: Generate coverage badge
         if: always()
         run: |
+          COVERAGE="${{ steps.coverage.outputs.percentage }}"
           if [ "${{ steps.coverage.outputs.status }}" == "failing" ]; then
             COLOR="red"
-            TEXT="failing"
+            TEXT="${COVERAGE}%25 (failing)"
           else
-            COVERAGE="${{ steps.coverage.outputs.percentage }}"
             if [ "$COVERAGE" -ge 80 ]; then
               COLOR="brightgreen"
             elif [ "$COVERAGE" -ge 70 ]; then
