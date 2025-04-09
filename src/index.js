@@ -31,6 +31,7 @@ async function main() {
     // Process each recipe
     for (const doc of recipeDocs) {
       try {
+        // add imported tag to the recipe
         doc.tags = [ ...(doc.tags || []), importedTag ];
         const recipeHtml = doc.content
         
