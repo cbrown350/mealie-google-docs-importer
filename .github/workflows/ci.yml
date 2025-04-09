@@ -60,7 +60,7 @@ jobs:
           COVERAGE="${{ steps.coverage.outputs.percentage }}"
           if [ "${{ steps.coverage.outputs.status }}" == "failing" ]; then
             COLOR="red"
-            TEXT="${COVERAGE}%25 (failing)"
+            TEXT="${COVERAGE}%25\%20(failing)"
           else
             if [ "$COVERAGE" -ge 80 ]; then
               COLOR="brightgreen"
