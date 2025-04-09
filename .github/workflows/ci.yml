@@ -55,8 +55,25 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
+          
+          # Save current coverage and badge files
+          mkdir -p /tmp/coverage-backup
+          cp -r coverage/* /tmp/coverage-backup/
+          mkdir -p /tmp/badges-backup
+          cp -r .github/badges/* /tmp/badges-backup/
+          
+          # Switch to badges branch
           git fetch
           git checkout badges 2>/dev/null || git checkout -b badges
+          
+          # Clean and restore files
+          git rm -rf . || true
+          git clean -fxd
+          mkdir -p .github/badges coverage
+          cp -r /tmp/coverage-backup/* coverage/
+          cp -r /tmp/badges-backup/* .github/badges/
+          
+          # Commit and force push
           git add -f .github/badges/coverage.svg coverage/
           git commit -m "Update coverage badge and reports" || exit 0
-          git push origin badges
+          git push -f origin badges
