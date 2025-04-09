@@ -128,31 +128,19 @@ export async function fetchMatchingTags(tags) {
   }
   const tagsPath = '/api/organizers/tags';
   const url = `${mealieInstanceApiUrl}${tagsPath}`;
-  const existingTags = new Map();
+  const existingMatchedTags = new Map();
   
   try {
-    // Fetch all existing tags
-    const response = await fetch(url, {
-      headers: {
-        'Authorization': `Bearer ${mealieApiKey}`,
-        'Content-Type': 'application/json',
-      }
-    });
-
-    if (!response.ok) {
-      throw new Error(`Failed to fetch tags: ${response.status} ${response.statusText}`);
-    }
-
-    const allTags = await fetchExistingTags();
-    allTags.forEach(tag => existingTags.set(tag.name.toLowerCase(), tag));
+    const existingTags = await fetchAllExistingTags();
+    existingTags.forEach(tag => existingMatchedTags.set(tag.name.toLowerCase(), tag));
 
     // Process each tag
     const processedTags = await Promise.all(tags.map(async tagName => {
       const normalizedName = tagName.toLowerCase();
       
       // If tag exists, return it
-      if (existingTags.has(normalizedName)) {
-        return existingTags.get(normalizedName);
+      if (existingMatchedTags.has(normalizedName)) {
+        return existingMatchedTags.get(normalizedName);
       }
 
       // Create new tag if it doesn't exist
@@ -177,8 +165,8 @@ export async function fetchMatchingTags(tags) {
       return newTag;
     }));
 
-    logger.info(`Processed ${processedTags.length} tags`);
-    return processedTags;
+    logger.info(`Processed ${processedTags?.length || 0} tags`);
+    return processedTags || [];
 
   } catch (error) {
     logger.error(`Error processing tags: ${error.message}`);
@@ -193,7 +181,7 @@ export async function fetchMatchingTags(tags) {
  * @returns {Promise<Array>} Array of tag objects from the Mealie instance
  * @throws {Error} If the API call fails
  */
-export async function fetchExistingTags() {
+export async function fetchAllExistingTags() {
   const tagsPath = '/api/organizers/tags';
   const url = `${mealieInstanceApiUrl}${tagsPath}`;
   
@@ -211,11 +199,11 @@ export async function fetchExistingTags() {
     }
 
     const { items: allTags } = await response.json();
-    logger.info(`Fetched ${allTags.length} existing tags`);
-    return allTags;
+    logger.info(`Fetched ${allTags?.length || 0} existing tags`);
+    return allTags || [];
   
   } catch (error) {
-    logger.error(`Error processing tags: ${error.message}`);
+    logger.error(`Error fetching tags: ${error.message}`);
     throw error;
   }
 }
