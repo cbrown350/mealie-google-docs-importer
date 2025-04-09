@@ -1,7 +1,7 @@
 # Recipe Importer
 
 ![CI](https://github.com/cbrown350/mealie-google-docs-importer/workflows/CI/badge.svg)
-![Coverage](https://github.com/cbrown350/mealie-google-docs-importer/blob/master/.github/badges/coverage.svg)
+![Coverage](https://github.com/cbrown350/mealie-google-docs-importer/blob/badges/.github/badges/coverage.svg)
 
 Imports recipes from Google Drive documents into Mealie. The program gets the text of Google Docs from the specified root folder and subfolders and uploads them to a Mealie instance where they are parsed using OpenAI if set up properly.
 

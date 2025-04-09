@@ -49,12 +49,16 @@ jobs:
         with:
           name: coverage-report
           path: coverage/
-
-      - name: Commit and push badge
+          
+      - name: Commit and push badge to badges branch
         if: github.ref == 'refs/heads/master'
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
+          git fetch
+          git checkout badges 2>/dev/null || git checkout -b badges
+          mkdir -p .github/badges
+          cp .github/badges/coverage.svg .github/badges/coverage.svg
           git add .github/badges/coverage.svg
           git commit -m "Update coverage badge" || exit 0
-          git push
+          git push origin badges
