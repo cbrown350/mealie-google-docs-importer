@@ -28,6 +28,7 @@ jobs:
         run: npm run lint
 
       - name: Run tests with coverage
+        if: always()
         run: npm test -- --coverage
 
       - name: Get Coverage
@@ -70,7 +71,7 @@ jobs:
             fi
             TEXT="${COVERAGE}%25"
           fi
-          
+
           curl -o .github/badges/coverage.svg \
           "https://img.shields.io/badge/coverage-${TEXT}-${COLOR}"
 
@@ -89,7 +90,7 @@ jobs:
           
           # Save current coverage and badge files
           mkdir -p /tmp/coverage-backup
-          cp -r coverage/* /tmp/coverage-backup/
+          cp -r coverage/* /tmp/coverage-backup/ || exit 0
           mkdir -p /tmp/badges-backup
           cp -r .github/badges/* /tmp/badges-backup/
           
@@ -101,10 +102,11 @@ jobs:
           git rm -rf . || true
           git clean -fxd
           mkdir -p .github/badges coverage
-          cp -r /tmp/coverage-backup/* coverage/
+          cp -r /tmp/coverage-backup/* coverage/ || exit 0
           cp -r /tmp/badges-backup/* .github/badges/
           
           # Commit and force push
-          git add -f .github/badges/coverage.svg coverage/
+          git add -f .github/badges/coverage.svg
+          git add -f coverage/ || exit 0
           git commit -m "Update coverage badge and reports" || exit 0
           git push -f origin badges
