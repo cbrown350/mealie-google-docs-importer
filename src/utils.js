@@ -1,5 +1,6 @@
 import winston from 'winston';
 import util from 'util';
+import process from 'process';
 
 const MAX_OBJECT_DEPTH = 3; // Set desired depth
 

@@ -1,6 +1,7 @@
 import fetch from 'node-fetch';
 import { createLogger } from './utils.js';
 import dotenv from 'dotenv';
+import process from 'process';
 
 dotenv.config();
 

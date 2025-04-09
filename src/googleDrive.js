@@ -8,6 +8,8 @@ import PDFParser from 'pdf2json';
 import http from 'http';
 import open from 'open';  
 import dotenv from 'dotenv';
+import process from 'process';
+import Buffer from 'buffer';
 
 dotenv.config();
 
@@ -432,7 +434,7 @@ export async function getAllRecipeDocs(drive, rootFolderId) {
         if (file.mimeType === 'application/vnd.google-apps.folder') {
           // Process subfolder with current tags
           await processFolder(file.id, currentTags);
-        } else if (FILE_HANDLERS.hasOwnProperty(file.mimeType)) {
+        } else if (Object.hasOwn(FILE_HANDLERS, file.mimeType)) {
           const content = await getFileContent(drive, file);
           if (content) {
             // Log the tags being added

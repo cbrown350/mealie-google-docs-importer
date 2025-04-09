@@ -2,6 +2,7 @@ import { setupGoogleDrive, getAllRecipeDocs } from './googleDrive.js';
 import { uploadToMealie, addRecipeTags } from './mealie.js';
 import { createLogger, withRetry } from './utils.js';
 import dotenv from 'dotenv';
+import process from 'process';
 
 dotenv.config();
 
