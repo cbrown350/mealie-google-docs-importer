@@ -37,9 +37,15 @@
   "babel": {
     "presets": [
       "@babel/preset-env"
-    ]
+    ],
+    "sourceMaps": "inline"
   },
   "jest": {
+    "collectCoverage": true,
+    "coverageReporters": [
+      "text",
+      "lcov"
+    ],
     "globals": {
       "ts-jest": {
         "useESM": true
@@ -48,14 +54,12 @@
     "moduleNameMapper": {
       "^(\\.{1,2}/.*)\\.js$": "$1"
     },
-    "testEnvironment": "node",
+    "testEnvironment": "jest-environment-node",
     "testMatch": [
       "**/__tests__/**/*.test.js",
       "**/?(*.)+(spec|test).js"
     ],
     "transform": {
-      "^.+\\.mjs$": "babel-jest",
-      "^.+\\.[jt]sx?$": "babel-jest"
     }
   },
   "nodemonConfig": {

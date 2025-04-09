@@ -66,10 +66,14 @@ export async function uploadToMealie(recipe, recipeName) {
  * @throws {Error} If adding tags fails
  */
 export async function addRecipeTags(recipeSlug, tags) {
+  if (!tags || !Array.isArray(tags) || tags?.length === 0) {
+    return [];  
+  }
   const mealiePath = `/api/recipes/${recipeSlug}`;
   const url = `${mealieInstanceApiUrl}${mealiePath}`;
   
   try {
+    // Get the groupId for the recipe, required for updating
     let response = await fetch(url, {
       method: 'GET',
       headers: {
@@ -119,7 +123,7 @@ export async function addRecipeTags(recipeSlug, tags) {
  * @returns {Promise<Array>} Array of complete tag objects for Mealie API
  */
 export async function fetchMatchingTags(tags) {
-  if (!tags || !Array.isArray(tags) || tags.length === 0) {
+  if (!tags || !Array.isArray(tags) || tags?.length === 0) {
     return [];  
   }
   const tagsPath = '/api/organizers/tags';
