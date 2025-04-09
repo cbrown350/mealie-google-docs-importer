@@ -38,8 +38,16 @@ const strToBool = (str) => {
  * @returns {Promise<string>} Extracted text content from the PDF
  */
 async function parsePDF(buffer) {
+  const pdfParser = new PDFParser();
   return new Promise((resolve, reject) => {
-    const pdfParser = new PDFParser();
+    // Cleanup function to destroy the parser
+    const cleanup = () => {
+      try {
+        pdfParser.destroy();
+      } catch (err) {
+        logger.warn(`Error cleaning up PDFParser: ${err.message}`);
+      }
+    };
     
     pdfParser.on("pdfParser_dataReady", (pdfData) => {
       const text = decodeURIComponent(pdfData.Pages.reduce((acc, page) => {
@@ -49,14 +57,22 @@ async function parsePDF(buffer) {
           }, '');
         }, '') + '\n';
       }, ''));
+      cleanup();
       resolve(text);
     });
     
     pdfParser.on("pdfParser_dataError", (error) => {
-      reject(new Error(error));
+      cleanup();
+      reject(new Error(`Error parsing PDF data: ${error.parserError}`));
     });
 
-    pdfParser.parseBuffer(buffer);
+
+    try {
+      pdfParser.parseBuffer(buffer);
+    } catch (err) {
+      cleanup();
+      reject(new Error(`Error parsing PDF buffer: ${err.message}`));
+    }
   });
 }
 
@@ -399,11 +415,15 @@ export async function getAllRecipeDocs(drive, rootFolderId) {
   const recipes = [];
   
   async function processFolder(folderId, parentTags = [], isRoot = false) {
-    // Get the current folder's name
-    const folderName = await getFolderName(drive, folderId);
-    // Create current tags array including the current folder name
+    // Create current tags array including the current folder name if appropriate
+    const currentTags = [...parentTags];
     const includeRootFolder = strToBool(process.env.INCLUDE_ROOT_FOLDER_AS_TAG);
-    const currentTags = isRoot && !includeRootFolder ? [] : [...parentTags, folderName];
+    if(includeRootFolder || !isRoot) {
+      const folderName = await getFolderName(drive, folderId);
+      if (folderName) {
+        currentTags.push(folderName);
+      }
+    }
     
     const files = await listFolderContents(drive, folderId);
     
@@ -422,8 +442,7 @@ export async function getAllRecipeDocs(drive, rootFolderId) {
               name: file.name,
               content,
               mimeType: file.mimeType,
-              tags: currentTags,
-              folderName
+              tags: currentTags
             });
             logger.info(`Successfully processed ${file.name} (${file.mimeType})`);
           }
