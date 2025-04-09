@@ -185,7 +185,7 @@ export async function setupGoogleDrive() {
  * @returns {Promise<OAuth2Client|null>} The authenticated Google client if valid credentials exist,
  *                                      null otherwise
  */
-async function loadSavedCredentialsIfExist1() {
+async function loadSavedCredentialsIfExist() {
   try {
     if (!await fs.access(tokenPath).then(() => true).catch(() => false)) {
       logger.debug('Google token file does not exist');
