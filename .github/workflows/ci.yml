@@ -56,10 +56,21 @@ jobs:
       - name: Generate coverage badge
         if: always()
         run: |
-          COLOR=$([ "${{ steps.coverage.outputs.status }}" == "failing" ] && echo "red" || \
-                 [ "${{ steps.coverage.outputs.percentage }}" -ge 80 ] && echo "brightgreen" || \
-                 [ "${{ steps.coverage.outputs.percentage }}" -ge 70 ] && echo "yellow" || echo "red")
-          TEXT=$([ "${{ steps.coverage.outputs.status }}" == "failing" ] && echo "failing" || echo "${{ steps.coverage.outputs.percentage }}%25")
+          if [ "${{ steps.coverage.outputs.status }}" == "failing" ]; then
+            COLOR="red"
+            TEXT="failing"
+          else
+            COVERAGE="${{ steps.coverage.outputs.percentage }}"
+            if [ "$COVERAGE" -ge 80 ]; then
+              COLOR="brightgreen"
+            elif [ "$COVERAGE" -ge 70 ]; then
+              COLOR="yellow"
+            else
+              COLOR="red"
+            fi
+            TEXT="${COVERAGE}%25"
+          fi
+          
           curl -o .github/badges/coverage.svg \
           "https://img.shields.io/badge/coverage-${TEXT}-${COLOR}"
 
