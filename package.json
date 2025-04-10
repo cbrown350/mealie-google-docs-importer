@@ -54,6 +54,10 @@
   },
   "jest": {
     "collectCoverage": true,
+    "collectCoverageFrom": [
+      "src/**/*.js",
+      "!src/**/*.test.js"
+    ],
     "coveragePathIgnorePatterns": [
       "/__tests__/",
       "/node_modules/"
