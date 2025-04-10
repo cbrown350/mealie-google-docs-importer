@@ -3,7 +3,7 @@
 [![CI](https://github.com/cbrown350/mealie-google-docs-importer/workflows/CI/badge.svg)](https://github.com/cbrown350/mealie-google-docs-importer/actions)
 [![Coverage](https://raw.githubusercontent.com/cbrown350/mealie-google-docs-importer/badges/.github/badges/coverage.svg)](https://htmlpreview.github.io/?https://github.com/cbrown350/mealie-google-docs-importer/blob/badges/coverage/lcov-report/index.html)
 
-Imports recipes from Google Drive documents into Mealie. The program gets the text of Google Docs from the specified root folder and subfolders and uploads them to a Mealie instance where they are parsed using OpenAI if set up properly.
+Imports recipes from Google Drive documents into [Mealie](https://mealie.io), a recipe manager. The app gets the text of Google Docs from the specified root folder and subfolders and uploads them to a Mealie instance where they are parsed using OpenAI if set up properly.
 
 ## Setup
 
@@ -13,10 +13,10 @@ Imports recipes from Google Drive documents into Mealie. The program gets the te
    npm install
    ```
 
-2. Create a Google Cloud project and enable the Google Drive API
-   - <https://console.cloud.google.com/apis/credentials>
+2. Create a Google Cloud project in the [Google Cloud Console](https://console.cloud.google.com)
+3. In the project, enable the Google Drive API, create a new OAuth credential, download the credentials JSON file and save it as `googleDriveCredentials.json` in the project root
    - <https://console.cloud.google.com/apis/api/drive.googleapis.com>
-3. Create a new OAuth credential, download the credentials JSON file and save it as `googleDriveCredentials.json` in the project root
+   - <https://console.cloud.google.com/apis/credentials>
    - Make sure to set the redirect URI to `http://localhost:3000/oauth2callback` before downloading the JSON file
 4. Copy `.env.example` to `.env` and fill in your:
    - Mealie API URL and key
@@ -38,7 +38,7 @@ npm start <YOUR_FOLDER_ID>
 
 The folder ID can be found in the Google Drive URL when viewing the folder.
 
-The first time you run the program, it will open a browser window to authenticate with your Google account. You will have to allow for the 'unsafe' app since it has not been reviewed by Google. After authentication, it will save the credentials in `googleDriveToken.json` for future use.
+The first time you run the program, it will open a browser window to authenticate with your Google account. You will have to allow for the "unsafe" app since it has not been reviewed by Google. After authentication, it will save the credentials in `googleDriveToken.json` for future use.
 
 ## Output
 
