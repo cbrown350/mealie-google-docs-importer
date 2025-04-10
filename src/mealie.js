@@ -1,12 +1,14 @@
+// TODO: Add support for uploading images to Mealie if found in recipe doc (binary data and mimeType)
+// TODO: Add updating cooking/prep times if found in recipe doc after initially created (similar to how tags are done now)
+// TODO: Add AI-generated tags based on content
+// TODO: Add AI-generated nutrition facts based on content (OpenAI seems unreliable when tested before) after initially created (similar to how tags are done now)
+
 import fetch from 'node-fetch';
 import { createLogger } from './utils.js';
 import dotenv from 'dotenv';
 import process from 'process';
 
 dotenv.config();
-
-// TODO: Add support for uploading images to Mealie
-// TODO: Add updating cooking/prep times
 
 const logger = createLogger();
 

@@ -1,3 +1,6 @@
+// TODO: Add image handling for file instead of text-like doc, addition recipe properties to contain binary data and mimeType
+// TODO: Record uploaded recipes in git-ignored file and optionally (env var?) skip already-uploaded recipes, id by fileId, hash or folder-slug?
+
 import { google } from 'googleapis';
 import { createLogger } from './utils.js';
 import path from 'path';
@@ -12,8 +15,6 @@ import process from 'process';
 import { Buffer } from 'buffer';
 
 dotenv.config();
-
-// TODO: Add image handling
 
 const oauth2RedirectPort = process.env.OAUTH2_REDIRECT_PORT || 3000;
 const oauth2RedirectUrl = process.env.OAUTH2_REDIRECT_URL || `http://localhost:${oauth2RedirectPort}/oauth2callback`;
@@ -30,10 +31,47 @@ const tokenPath = path.join(__dirname, '..', 'googleDriveToken.json');
 const logger = createLogger();
 
 
-// Helper function to convert string to boolean safely
+/**
+ * Converts a string representation of a boolean value to a boolean type
+ * @param {string} str - The string to convert to boolean ('true', '1', 'false', '0', etc)
+ * @returns {boolean} - Returns true if string is 'true' or '1' (case insensitive), false otherwise
+ */
 const strToBool = (str) => {
   return str?.toLowerCase() === 'true' || str === '1';
 };
+
+
+/**
+ * Processes a single line from a PDF text item, extracting the text content
+ * @param {Object} line - PDF line object containing text content
+ * @param {string} line.T - The text content of the line
+ * @returns {string} The text content followed by a space
+ */
+function processLine(line) {
+  return line.T + ' ';
+}
+
+
+/**
+ * Processes a text item from a PDF by combining all its lines
+ * @param {Object} textItem - PDF text item object
+ * @param {Array} textItem.R - Array of line objects to process
+ * @returns {string} Combined text content from all lines
+ */
+function processTextItem(textItem) {
+  return textItem.R.reduce((lineAcc, line) => lineAcc + processLine(line), '');
+}
+
+
+/**
+ * Processes a page of text by concatenating all text items with processed text items
+ * @param {Object} page - The page object containing text items
+ * @param {Array} page.Texts - Array of text items to process
+ * @returns {string} Concatenated string of all processed text items with a trailing newline
+ */
+function processPage(page) {
+  return page.Texts.reduce((textAcc, textItem) => textAcc + processTextItem(textItem), '') + '\n';
+}
 
 
 /**
@@ -54,13 +92,7 @@ async function parsePDF(buffer) {
     };
     
     pdfParser.on("pdfParser_dataReady", (pdfData) => {
-      const text = decodeURIComponent(pdfData.Pages.reduce((acc, page) => {
-        return acc + page.Texts.reduce((textAcc, textItem) => {
-          return textAcc + textItem.R.reduce((lineAcc, line) => {
-            return lineAcc + line.T + ' ';
-          }, '');
-        }, '') + '\n';
-      }, ''));
+      const text = decodeURIComponent(pdfData.Pages.reduce((acc, page) => acc + processPage(page), ''));
       cleanup();
       resolve(text);
     });
