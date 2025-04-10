@@ -13,11 +13,11 @@ const folderId = args[0] || process.env.GOOGLE_DRIVE_FOLDER_ID;
 
 const importedTag = process.env.IMPORTED_TAG || "imported";
 
-async function main() {
+export async function main() {
   try {
     if (!folderId) {
       logger.error('GOOGLE_DRIVE_FOLDER_ID environment variable must be set');
-      process.exit(1);
+      throw new Error('Missing folder ID');
     }
     logger.info(`Using folder ID: ${folderId}`);
     
@@ -33,7 +33,8 @@ async function main() {
     for (const doc of recipeDocs) {
       try {
         // add imported tag to the recipe
-        doc.tags = [ ...(doc.tags || []), importedTag ];
+        if(importedTag && !doc.tags.includes(importedTag))
+          doc.tags = [ ...(doc.tags || []), importedTag ];
         const recipeHtml = doc.content
         
         // Upload to Mealie with retry
