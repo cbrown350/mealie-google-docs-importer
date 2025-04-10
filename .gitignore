@@ -1,8 +1,0 @@
-node_modules/
-.env
-googleDrive*.json
-output/
-*.log
-test.http
-scratch.txt
-coverage
